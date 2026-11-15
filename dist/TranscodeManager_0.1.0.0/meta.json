@@ -1,0 +1,14 @@
+{
+  "category": "General",
+  "guid": "6f0d5a42-3b1c-4e8a-9a57-2c1d7b94e0a3",
+  "name": "Transcode Manager",
+  "description": "Find large H.264 files, queue H.265 transcodes for a nightly window, and compare before replacing.",
+  "overview": "H.264 to H.265 batch transcoding with review.",
+  "owner": "local",
+  "targetAbi": "10.11.0.0",
+  "timestamp": "2026-11-15T00:00:00Z",
+  "version": "0.1.0.0",
+  "status": "Active",
+  "autoUpdate": false,
+  "assemblies": ["Jellyfin.Plugin.TranscodeManager.dll"]
+}

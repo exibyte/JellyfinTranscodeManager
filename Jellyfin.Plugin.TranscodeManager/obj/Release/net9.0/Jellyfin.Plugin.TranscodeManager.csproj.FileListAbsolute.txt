@@ -1,0 +1,12 @@
+/src/Jellyfin.Plugin.TranscodeManager/bin/Release/net9.0/Jellyfin.Plugin.TranscodeManager.deps.json
+/src/Jellyfin.Plugin.TranscodeManager/bin/Release/net9.0/Jellyfin.Plugin.TranscodeManager.dll
+/src/Jellyfin.Plugin.TranscodeManager/bin/Release/net9.0/Jellyfin.Plugin.TranscodeManager.pdb
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.csproj.AssemblyReference.cache
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.GeneratedMSBuildEditorConfig.editorconfig
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.AssemblyInfoInputs.cache
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.AssemblyInfo.cs
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.csproj.CoreCompileInputs.cache
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.dll
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/refint/Jellyfin.Plugin.TranscodeManager.dll
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/Jellyfin.Plugin.TranscodeManager.pdb
+/src/Jellyfin.Plugin.TranscodeManager/obj/Release/net9.0/ref/Jellyfin.Plugin.TranscodeManager.dll

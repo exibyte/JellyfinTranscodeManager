@@ -1,0 +1,3 @@
+/src/out/Jellyfin.Plugin.TranscodeManager.dll
+/src/out/Jellyfin.Plugin.TranscodeManager.deps.json
+/src/out/Jellyfin.Plugin.TranscodeManager.pdb

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Transcode Manager</title>
+</head>
+<body>
+<div id="tmPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select">
+    <div data-role="content">
+        <div class="content-primary" style="max-width:1200px;">
+            <h1>Transcode Manager</h1>
+            <div id="tmBanner" style="padding:.7em 1em;margin-bottom:1em;border-radius:6px;background:rgba(127,127,127,.15);"></div>
+
+            <div style="margin-bottom:1em;">
+                <button is="emby-button" class="raised tmTab" data-tab="cand">Candidates</button>
+                <button is="emby-button" class="raised tmTab" data-tab="jobs">Queue &amp; review</button>
+                <button is="emby-button" class="raised tmTab" data-tab="set">Settings</button>
+            </div>
+
+            <!-- Candidates -->
+            <div id="tab-cand" class="tmPane">
+                <p style="opacity:.8">H.264 files ranked by size. <b>GB/hour</b> is the key filter: 1 GB for 50 min = 1.2 GB/h (skip), 5 GB for 40 min = 7.5 GB/h (show).</p>
+                <div style="display:flex;flex-wrap:wrap;gap:1em;align-items:flex-end;">
+                    <div class="inputContainer"><label>Min GB/hour</label><input is="emby-input" id="fGph" type="number" step="0.1" value="3" style="width:7em"></div>
+                    <div class="inputContainer"><label>Min size (GB)</label><input is="emby-input" id="fSize" type="number" step="0.1" value="0" style="width:7em"></div>
+                    <div class="inputContainer"><label>Min duration (min)</label><input is="emby-input" id="fMinDur" type="number" value="0" style="width:8em"></div>
+                    <div class="inputContainer"><label>Max duration (min)</label><input is="emby-input" id="fMaxDur" type="number" value="0" style="width:8em"></div>
+                    <div class="inputContainer"><label>Search</label><input is="emby-input" id="fSearch" type="text" style="width:12em"></div>
+                    <div class="selectContainer"><label>Sort</label>
+                        <select is="emby-select" id="fSort"><option value="size">Size</option><option value="gbph">GB/hour</option><option value="savings">Est. savings</option></select></div>
+                    <div style="padding-bottom:.6em"><button is="emby-button" class="raised button-submit" id="btnSearch">Search</button></div>
+                </div>
+                <p id="candInfo" style="opacity:.8"></p>
+                <button is="emby-button" class="raised" id="btnQueue">Queue selected</button>
+                <label style="margin-left:1em"><input type="checkbox" id="chkAll"> select all</label>
+                <div style="overflow-x:auto;margin-top:.8em;">
+                    <table class="tmTable" style="width:100%;border-collapse:collapse;">
+                        <thead><tr><th></th><th align="left">Name</th><th align="right">Size GB</th><th align="right">Min</th><th align="right">GB/h</th><th align="right">Est. saving GB</th><th align="left">Res</th><th align="left">State</th></tr></thead>
+                        <tbody id="candBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Jobs -->
+            <div id="tab-jobs" class="tmPane" style="display:none">
+                <button is="emby-button" class="raised" id="btnRunNow">Run queue now</button>
+                <span style="opacity:.8;margin-left:1em">Normally jobs only start inside the nightly window. A running job always finishes.</span>
+                <div style="overflow-x:auto;margin-top:.8em;">
+                    <table class="tmTable" style="width:100%;border-collapse:collapse;">
+                        <thead><tr><th align="left">Name</th><th align="left">Status</th><th align="left">Progress</th><th align="right">Source</th><th align="right">New</th><th align="right">Saved</th><th align="left">Actions</th></tr></thead>
+                        <tbody id="jobBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="cmpPanel" style="display:none;margin-top:2em;">
+                    <h2 id="cmpTitle"></h2>
+                    <div id="cmpMeta" style="opacity:.85;margin-bottom:.6em"></div>
+                    <div style="margin-bottom:.6em">
+                        <span>Compare at: </span><span id="cmpTimes"></span>
+                        <button is="emby-button" class="raised" id="btnSsim" style="margin-left:1em">Compute SSIM (2 min sample)</button>
+                        <button is="emby-button" class="raised" id="btnCmpClose" style="margin-left:.5em">Close</button>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;max-width:1100px;opacity:.85"><span>◀ Original (H.264)</span><span>New (H.265) ▶</span></div>
+                    <div id="cmpBox" style="position:relative;max-width:1100px;background:#000;min-height:120px;">
+                        <img id="cmpNew" style="width:100%;display:block">
+                        <img id="cmpOld" style="position:absolute;top:0;left:0;width:100%;display:block;clip-path:inset(0 50% 0 0)">
+                        <div id="cmpLine" style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 3px #000"></div>
+                    </div>
+                    <input type="range" id="cmpSlider" min="0" max="100" value="50" style="width:100%;max-width:1100px">
+                    <p style="opacity:.7">Frames are lossless PNGs decoded by ffmpeg from both files, so the browser never needs HEVC support. Zoom in with your browser (Ctrl +) to pixel-peep.</p>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="tab-set" class="tmPane" style="display:none">
+                <form id="setForm" style="max-width:520px;">
+                    <div class="inputContainer"><label>Window start (server time, HH:mm)</label><input is="emby-input" id="sStart" type="text"></div>
+                    <div class="inputContainer"><label>Window end (HH:mm; earlier than start = crosses midnight)</label><input is="emby-input" id="sEnd" type="text"></div>
+                    <div class="selectContainer"><label>Encoder</label>
+                        <select is="emby-select" id="sEnc"><option value="hevc_nvenc">hevc_nvenc (GPU, NVIDIA)</option><option value="libx265">libx265 (CPU)</option></select></div>
+                    <div class="inputContainer"><label>Preset (NVENC: p1-p7, x265: slow, medium, ...)</label><input is="emby-input" id="sPreset" type="text"></div>
+                    <div class="inputContainer"><label>Quality (NVENC -cq / x265 -crf; lower = better)</label><input is="emby-input" id="sCq" type="number"></div>
+                    <div class="inputContainer"><label>ffmpeg path (empty = Jellyfin's ffmpeg)</label><input is="emby-input" id="sFfmpeg" type="text"></div>
+                    <div class="inputContainer"><label>Staging directory (empty = Jellyfin cache; keep outside your libraries)</label><input is="emby-input" id="sStage" type="text"></div>
+                    <button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .tmTable th, .tmTable td { padding:.45em .6em; border-bottom:1px solid rgba(127,127,127,.25); }
+        .tmTab.active { outline:2px solid #00a4dc; }
+        .tmTimeBtn { margin-right:.4em; padding:.2em .6em; cursor:pointer; }
+    </style>
+
+    <script type="text/javascript">
+    (function () {
+        var PID = '6f0d5a42-3b1c-4e8a-9a57-2c1d7b94e0a3';
+        var page = document.querySelector('#tmPage');
+        var timer = null, cmpJob = null;
+
+        function $(id) { return page.querySelector('#' + id); }
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+        function gb(b) { return (b / 1073741824).toFixed(2); }
+
+        function api(method, path, body) {
+            return fetch(ApiClient.getUrl(path), {
+                method: method,
+                headers: { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"', 'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined
+            }).then(function (r) {
+                if (!r.ok) { return r.text().then(function (t) { throw new Error(t || r.status); }); }
+                return (r.headers.get('content-type') || '').indexOf('json') >= 0 ? r.json() : null;
+            });
+        }
+
+        function showTab(name) {
+            page.querySelectorAll('.tmPane').forEach(function (p) { p.style.display = 'none'; });
+            $('tab-' + name).style.display = '';
+            page.querySelectorAll('.tmTab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === name); });
+            if (name === 'jobs') { loadJobs(); }
+            if (name === 'set') { loadSettings(); }
+        }
+
+        function loadStatus() {
+            api('GET', 'TranscodeManager/Status').then(function (s) {
+                $('tmBanner').innerHTML = 'Window <b>' + esc(s.WindowStart) + ' - ' + esc(s.WindowEnd) + '</b> (server time now ' + esc(s.ServerTime) + '): ' +
+                    (s.InWindow ? '<b style="color:#52b54b">open</b>' : '<b style="color:#e8a317">closed</b>') +
+                    (s.RunNow ? ' &middot; <b>run-now override active</b>' : '') + (s.Running ? ' &middot; a job is running' : '');
+            }).catch(function () {});
+        }
+
+        // ---- Candidates ----
+        function search() {
+            var q = 'TranscodeManager/Candidates?codec=h264' +
+                '&minGbPerHour=' + (+$('fGph').value || 0) + '&minSizeGb=' + (+$('fSize').value || 0) +
+                '&minDurationMin=' + (+$('fMinDur').value || 0) + '&maxDurationMin=' + (+$('fMaxDur').value || 0) +
+                '&sort=' + $('fSort').value + '&search=' + encodeURIComponent($('fSearch').value || '');
+            $('candInfo').textContent = 'Scanning library...';
+            api('GET', q).then(function (r) {
+                var total = 0;
+                r.Items.forEach(function (c) { total += c.EstSavingsGb; });
+                $('candInfo').textContent = r.Total + ' files match (showing ' + r.Items.length + '), estimated savings of shown files ~' + total.toFixed(1) + ' GB (assumes ~45%).';
+                $('candBody').innerHTML = r.Items.map(function (c) {
+                    var busy = !!c.JobStatus;
+                    return '<tr><td><input type="checkbox" class="candChk" value="' + esc(c.ItemId) + '"' + (busy ? ' disabled' : '') + '></td>' +
+                        '<td title="' + esc(c.Path) + '">' + esc(c.Name) + '</td><td align="right">' + c.SizeGb + '</td><td align="right">' + c.DurationMinutes +
+                        '</td><td align="right"><b>' + c.GbPerHour + '</b></td><td align="right">' + c.EstSavingsGb + '</td><td>' + c.Width + 'x' + c.Height + '</td><td>' + esc(c.JobStatus || '') + '</td></tr>';
+                }).join('');
+            }).catch(function (e) { $('candInfo').textContent = 'Error: ' + e.message; });
+        }
+
+        function queueSelected() {
+            var ids = [].map.call(page.querySelectorAll('.candChk:checked'), function (c) { return c.value; });
+            if (!ids.length) { return; }
+            api('POST', 'TranscodeManager/Queue', { ItemIds: ids }).then(function (r) {
+                Dashboard.alert(r.Added + ' job(s) queued.');
+                search();
+            }).catch(function (e) { Dashboard.alert(e.message); });
+        }
+
+        // ---- Jobs ----
+        function loadJobs() {
+            loadStatus();
+            api('GET', 'TranscodeManager/Jobs').then(function (jobs) {
+                $('jobBody').innerHTML = jobs.map(function (j) {
+                    var saved = j.OutputBytes ? ((1 - j.OutputBytes / j.SourceBytes) * 100).toFixed(0) + '%' : '';
+                    var act = '';
+                    if (j.Status === 'Queued' || j.Status === 'Running') { act += '<button class="tmAct" data-a="cancel" data-id="' + j.Id + '">Cancel</button> '; }
+                    if (j.Status === 'PendingReview') {
+                        act += '<button class="tmAct" data-a="compare" data-id="' + j.Id + '">Compare</button> ' +
+                               '<button class="tmAct" data-a="accept" data-id="' + j.Id + '">Accept</button> ' +
+                               '<button class="tmAct" data-a="reject" data-id="' + j.Id + '">Reject</button>';
+                    }
+                    return '<tr><td title="' + esc(j.SourcePath) + '">' + esc(j.Name) + '</td><td title="' + esc(j.Error || '') + '">' + esc(j.Status) +
+                        (j.Status === 'Failed' ? ' &#9888;' : '') + '</td><td>' + (j.Status === 'Running' ? '<progress max="100" value="' + j.Progress + '"></progress> ' + j.Progress.toFixed(1) + '%' : '') +
+                        '</td><td align="right">' + gb(j.SourceBytes) + ' GB</td><td align="right">' + (j.OutputBytes ? gb(j.OutputBytes) + ' GB' : '') +
+                        '</td><td align="right">' + saved + (j.Ssim ? ' &middot; SSIM ' + j.Ssim : '') + '</td><td>' + act + '</td></tr>';
+                }).join('');
+                window.__tmJobs = jobs;
+            }).catch(function () {});
+        }
+
+        function jobAction(a, id) {
+            if (a === 'compare') { return openCompare(id); }
+            if (a === 'accept' && !confirm('Replace the original file with the H.265 version? The original is deleted.')) { return; }
+            if (a === 'reject' && !confirm('Delete the new H.265 file and keep the original?')) { return; }
+            api('POST', 'TranscodeManager/Jobs/' + id + '/' + a.charAt(0).toUpperCase() + a.slice(1)).then(loadJobs).catch(function (e) { Dashboard.alert(e.message); });
+        }
+
+        // ---- Compare ----
+        function blobUrl(path) {
+            return fetch(ApiClient.getUrl(path), { headers: { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"' } })
+                .then(function (r) { if (!r.ok) { throw new Error('frame failed'); } return r.blob(); })
+                .then(function (b) { return URL.createObjectURL(b); });
+        }
+
+        function openCompare(id) {
+            var j = (window.__tmJobs || []).filter(function (x) { return x.Id === id; })[0];
+            if (!j) { return; }
+            cmpJob = j;
+            $('cmpPanel').style.display = '';
+            $('cmpTitle').textContent = j.Name;
+            $('cmpMeta').textContent = gb(j.SourceBytes) + ' GB -> ' + gb(j.OutputBytes) + ' GB  (' + j.Encoder + ' ' + j.Preset + ', quality ' + j.Cq + ')' + (j.Ssim ? '  SSIM ' + j.Ssim : '');
+            var pcts = [0.1, 0.25, 0.5, 0.75, 0.9];
+            $('cmpTimes').innerHTML = pcts.map(function (p) {
+                var t = Math.round(j.DurationSeconds * p);
+                return '<button class="tmTimeBtn" data-t="' + t + '">' + Math.round(p * 100) + '%</button>';
+            }).join('');
+            loadFrames(Math.round(j.DurationSeconds * 0.5));
+            $('cmpPanel').scrollIntoView();
+        }
+
+        function loadFrames(t) {
+            var base = 'TranscodeManager/Jobs/' + cmpJob.Id + '/Frame?t=' + t + '&which=';
+            $('cmpMeta').dataset.loading = '1';
+            Promise.all([blobUrl(base + 'source'), blobUrl(base + 'output')]).then(function (u) {
+                $('cmpOld').src = u[0];
+                $('cmpNew').src = u[1];
+            }).catch(function (e) { Dashboard.alert('Could not extract frames: ' + e.message); });
+        }
+
+        function loadSettings() {
+            ApiClient.getPluginConfiguration(PID).then(function (c) {
+                $('sStart').value = c.WindowStart; $('sEnd').value = c.WindowEnd; $('sEnc').value = c.Encoder;
+                $('sPreset').value = c.Preset; $('sCq').value = c.Cq; $('sFfmpeg').value = c.FfmpegPath; $('sStage').value = c.StagingDir;
+            });
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            ApiClient.getPluginConfiguration(PID).then(function (c) {
+                c.WindowStart = $('sStart').value; c.WindowEnd = $('sEnd').value; c.Encoder = $('sEnc').value;
+                c.Preset = $('sPreset').value; c.Cq = parseInt($('sCq').value, 10) || 24; c.FfmpegPath = $('sFfmpeg').value; c.StagingDir = $('sStage').value;
+                ApiClient.updatePluginConfiguration(PID, c).then(function (r) { Dashboard.processPluginConfigurationUpdateResult(r); loadStatus(); });
+            });
+            return false;
+        }
+
+        // ---- wiring ----
+        page.addEventListener('click', function (e) {
+            var t = e.target;
+            if (t.classList.contains('tmTab')) { showTab(t.getAttribute('data-tab')); }
+            else if (t.classList.contains('tmAct')) { jobAction(t.getAttribute('data-a'), t.getAttribute('data-id')); }
+            else if (t.classList.contains('tmTimeBtn')) { loadFrames(t.getAttribute('data-t')); }
+        });
+        $('btnSearch').addEventListener('click', search);
+        $('btnQueue').addEventListener('click', queueSelected);
+        $('chkAll').addEventListener('change', function (e) { page.querySelectorAll('.candChk:not(:disabled)').forEach(function (c) { c.checked = e.target.checked; }); });
+        $('btnRunNow').addEventListener('click', function () { api('POST', 'TranscodeManager/RunNow?enable=true').then(loadStatus); });
+        $('btnCmpClose').addEventListener('click', function () { $('cmpPanel').style.display = 'none'; });
+        $('btnSsim').addEventListener('click', function () {
+            var b = $('btnSsim'); b.disabled = true; b.textContent = 'Computing...';
+            api('POST', 'TranscodeManager/Jobs/' + cmpJob.Id + '/Ssim').then(function (r) {
+                cmpJob.Ssim = r.Ssim; $('cmpMeta').textContent += '  SSIM ' + r.Ssim + ' (>0.97 is usually visually transparent)';
+            }).catch(function (e) { Dashboard.alert(e.message); }).then(function () { b.disabled = false; b.textContent = 'Compute SSIM (2 min sample)'; });
+        });
+        $('cmpSlider').addEventListener('input', function (e) {
+            var v = e.target.value;
+            $('cmpOld').style.clipPath = 'inset(0 ' + (100 - v) + '% 0 0)';
+            $('cmpLine').style.left = v + '%';
+        });
+        $('setForm').addEventListener('submit', saveSettings);
+
+        page.addEventListener('pageshow', function () {
+            showTab('cand');
+            loadStatus();
+            timer = setInterval(function () {
+                if ($('tab-jobs').style.display !== 'none') { loadJobs(); } else { loadStatus(); }
+            }, 3000);
+        });
+        page.addEventListener('pagehide', function () { clearInterval(timer); });
+    })();
+    </script>
+</div>
+</body>
+</html>
