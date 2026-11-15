@@ -1,2 +1,31 @@
-# JellyfinTranscodeManager
-Lets you Transcode your Files from h264/x264 to h265/x265 to reduce size without 
+# Jellyfin Transcode Manager (H.264 -> H.265)
+
+Targets Jellyfin **10.11.x** (net9.0). Change the two `Jellyfin.*` package versions in the csproj to match your server exactly, otherwise Jellyfin shows the plugin as "Not supported".
+
+## Build (no local SDK needed)
+    ./build.sh
+Produces `dist/TranscodeManager_0.1.0.0/` (dll + meta.json).
+
+## Install
+Copy that folder to `<jellyfin-config>/plugins/` (Docker: the folder mounted at `/config`, so `/config/plugins/TranscodeManager_0.1.0.0/`), then restart Jellyfin.
+Open **Dashboard > Transcode Manager** (also in the admin sidebar).
+
+## Jellyfin in Docker: required for your RTX 2080
+- GPU passthrough: `runtime: nvidia` (or `deploy.resources.reservations.devices` with `driver: nvidia, capabilities: [gpu]`) and `NVIDIA_DRIVER_CAPABILITIES=all`.
+- Set `TZ=Europe/Berlin` (or yours) - the nightly window uses the server's local time.
+- Media mounts must be **read-write** (accepting a job replaces the original).
+- Verify: `docker exec jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -hide_banner -encoders | grep hevc_nvenc`
+- Staging dir: default is Jellyfin's cache dir. Make sure it has space for a few large files and is NOT inside a library.
+
+## First test (safe)
+1. Candidates tab: leave Min GB/hour at 3, Search.
+2. Tick ONE short episode, Queue selected.
+3. Queue & review tab: **Run queue now** (bypasses the window).
+4. When it reaches *PendingReview*: Compare (slider + SSIM), then Accept or Reject.
+Originals are never touched until you press Accept.
+
+## Notes / limits
+- State is a JSON file (`<jellyfin-data>/transcodemanager/jobs.json`), no Redis.
+- Output is always `.mkv`. If the original was `.mp4` the extension changes, so Jellyfin sees a new item (watch state of that item can be lost). `.mkv` originals are replaced in place.
+- mov_text subtitles from MP4 can't be copied into MKV; such jobs fail verification with a clear error.
+- Jobs started inside the window always run to completion.
