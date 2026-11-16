@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "6f0d5a42-3b1c-4e8a-9a57-2c1d7b94e0a3",
+    "name": "Transcode Manager",
+    "description": "Find large H.264 files, queue H.265 transcodes for a nightly window, and compare before replacing. WARNING: Accept permanently deletes the original file.",
+    "overview": "H.264 to H.265 batch transcoding with review.",
+    "owner": "exibyte",
+    "category": "General",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "changelog": "First release. Note: Accept deletes the original source file.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/exibyte/jellyfin-plugin-transcodemanager/releases/download/v0.1.0.0/transcodemanager_0.1.0.0.zip",
+        "checksum": "2F8CA802B806D4E4BD453075C47C9F28",
+        "timestamp": "2026-11-16T12:00:00Z"
+      }
+    ]
+  }
+]
