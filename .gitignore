@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+out/
+dist/
+
+# Release archives (these go on the GitHub release, not in the repo)
+*.zip
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# NuGet / misc
+*.nupkg
+*.log
