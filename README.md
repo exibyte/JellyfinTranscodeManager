@@ -29,3 +29,13 @@ Originals are never touched until you press Accept.
 - Output is always `.mkv`. If the original was `.mp4` the extension changes, so Jellyfin sees a new item (watch state of that item can be lost). `.mkv` originals are replaced in place.
 - mov_text subtitles from MP4 can't be copied into MKV; such jobs fail verification with a clear error.
 - Jobs started inside the window always run to completion.
+
+
+## Install
+1. In Jellyfin: Dashboard → Plugins → Catalog → ⚙ (settings) → Add repository
+2. Paste: https://raw.githubusercontent.com/exibyte/JellyfinTranscodeManager/main/manifest.json
+3. Back in Catalog, install "Transcode Manager", then restart Jellyfin.
+4. Open Dashboard → Transcode Manager.
+
+Requires Jellyfin 10.11+ and an NVIDIA GPU with NVENC (or use the libx265 CPU encoder).
+**Warning:** Accept permanently deletes the original file. Back up first.
