@@ -39,3 +39,9 @@ Originals are never touched until you press Accept.
 
 Requires Jellyfin 10.11+ and an NVIDIA GPU with NVENC (or use the libx265 CPU encoder).
 **Warning:** Accept permanently deletes the original file. Back up first.
+
+## Made with AI. My idea, its execution.
+
+Some users on reddit think the obvious AI-Generated text is not noticeable enough.
+To make them happy this section has beeing added.
+Hope this helps.
